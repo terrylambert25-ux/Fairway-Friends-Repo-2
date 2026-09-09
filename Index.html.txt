@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="theme-color" content="#1b5e20">
+        <header><h1>⛳ Fairway Friends <small style="font-size:12px;opacity:.7">v1.1</small></h1></header>
+
+        </title>
+        <style>
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                font-family: system-ui, sans-serif;
+                -webkit-tap-highlight-color: transparent;
+            }
+            body {
+                background: #f0f4f0;
+                color: #1a2e1a;
+                padding-bottom: 40px;
+            }
+            header {
+                background: #1b5e20;
+                color: #fff;
+                padding: 14px;
+                text-align: center;
+            }
+            nav {
+                display: flex;
+                background: #2e7d32;
+                position: sticky;
+                top: 0;
+                z-index: 10;
+            }
+            nav button {
+                flex: 1;
+                padding: 14px 4px;
+                border: none;
+                background: none;
+                color: #c8e6c9;
+                font-size: 15px;
+                cursor: pointer;
+            }
+            nav button.active {
+                background: #1b5e20;
+                color: #fff;
+                font-weight: bold;
+            }
+            .page {
+                display: none;
+                padding: 16px;
+                max-width: 720px;
+                margin: 0 auto;
+            }
+            .page.active {
+                display: block;
+            }
+            .card {
+                background: #fff;
+                border-radius: 12px;
+                padding: 16px;
+                margin-bottom: 12px;
+                box-shadow: 0 1px 4px rgba(0,0,0,.1);
+            }
+            h2 {
+                margin-bottom: 12px;
+                color: #1b5e20;
+                font-size: 18px;
+            }
+            label {
+                display: block;
+                font-size: 13px;
+                color: #555;
+                margin-top: 10px;
+            }
+            input, select {
+                padding: 12px;
+                border: 1px solid #aaa;
+                border-radius: 8px;
+                font-size: 16px;
+                margin: 4px 0;
+                width: 100%;
+            }
+            button.primary {
+                background: #1b5e20;
+                color: #fff;
+                border: none;
+                padding: 14px 20px;
+                border-radius: 8px;
+                font-size: 16px;
+                cursor: pointer;
+                margin-top: 10px;
+                width: 100%;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 14px;
+            }
+            th, td {
+                border: 1px solid #ddd;
+                padding: 8px 4px;
+                text-align: center;
+            }
+            th {
+                background: #e8f5e9;
+                font-size: 12px;
+            }
+            .leaderboard-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 12px 8px;
+                border-bottom: 1px solid #eee;
+                font-size: 15px;
+                align-items: center;
+            }
+            .badge {
+                background: #1b5e20;
+                color: #fff;
+                border-radius: 12px;
+                padding: 4px 12px;
+                font-weight: bold;
+            }
+            .badge.good {
+                background: #0277bd;
+            }
+            .badge.bad {
+                background: #c62828;
+            }
+            #codeBar {
+                background: #0d3311;
+                color: #a5d6a7;
+                padding: 6px;
+                text-align: center;
+                font-size: 13px;
+                display: none;
+            }
+            .syncDot {
+                display: inline-block;
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: #999;
+                margin-right: 6px;
+            }
+            .syncDot.on {
+                background: #4caf50;
+            }
+            .stepper {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 12px;
+            }
+            .stepper button {
+                width: 52px;
+                height: 52px;
+                font-size: 26px;
+                border-radius: 12px;
+                border: 2px solid #1b5e20;
+                background: #fff;
+                color: #1b5e20;
+                font-weight: bold;
+            }
+            .stepper input {
+                width: 64px;
+                text-align: center;
+                font-size: 24px;
+                font-weight: bold;
+                padding: 6px;
+            }
+            .holeNav {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 14px;
+            }
+            .holeNav button {
+                padding: 12px 18px;
+                font-size: 15px;
+                border-radius: 8px;
+                border: none;
+                background: #2e7d32;
+                color: #fff;
+            }
+            .holeNav button:disabled {
+                background: #bbb;
+            }
+            .vsPar {
+                font-weight: bold;
+                font-size: 16px;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>
+                ⛳ Fairway Friends
+            </h1>
+        </header>
+        <div id="codeBar">
+            <span class="syncDot" id="syncDot">
+        </span>
+        Round code:
+        <b id="codeLabel">
+    </b>
+    <span id="playerCount">
+</span>
+</div>
+<nav>
+    <button class="active" onclick="show('rounds',this)">
+        Rounds
+    </button>
+    <button onclick="show('scorecard',this)">
+        Play
+    </button>
+    <button onclick="show('leaderboard',this)">
+        Board
+    </button>
+    <button onclick="show('courses',this)">
+        Courses
+    </button>
+</nav>
+<div id="rounds" class="page active">
+    <div class="card">
+        <h2>
+            Start / Join Round
+        </h2>
+        <label>
+        Join code — share with friends, or leave blank to create one
+    </label>
+    <input id="joinCode" placeholder="e.g. EAGLE4" style="text-transform:uppercase" autocomplete="off">
+    <label>
+    Course
+</label>
+<select id="courseSelect">
+</select>
+<label>
+Game Type
+</label>
+<select id="gameType">
+    <option value="stroke">
+        Stroke Play
+    </option>
+    <option value="stableford">
+        Stableford
+    </option>
+    <option value="skins">
+        Skins
+    </option>
+</select>
+<label>
+Players
+</label>
+<div id="playerInputs">
+    <input class="playerName" placeholder="Player 1 name" autocomplete="off">
+    <input class="playerName" placeholder="Player 2 name" autocomplete="off">
+</div>
+<button class="primary" onclick="addPlayer()">
+    + Add Player
+</button>
+<button class="primary" onclick="startRound()">
+    Start Round
+</button>
+</div>
+</div>
+<div id="scorecard" class="page">
+    <div class="card">
+        <h2 id="holeTitle">
+            Hole 1
+        </h2>
+        <div id="scorecardTable">
+        </div>
+        <div class="holeNav">
+            <button id="prevBtn" onclick="changeHole(-1)">
+                ← Prev
+            </button>
+            <button id="nextBtn" onclick="changeHole(1)">
+                Next →
+            </button>
+        </div>
+    </div>
+</div>
+<div id="leaderboard" class="page">
+    <div class="card">
+        <h2 id="lbTitle">
+            Leaderboard
+        </h2>
+        <div id="lbBody">
+        </div>
+        <button class="primary" onclick="copySummary()">
+            📋 Copy Summary
+        </button>
+    </div>
+</div>
+<div id="courses" class="page">
+    <div class="card">
+        <h2>
+            Course Library
+        </h2>
+        <div id="courseList">
+        </div>
+    </div>
+    <div class="card">
+        <h2>
+            Add Custom Course
+        </h2>
+        <label>
+        Course name
+    </label>
+    <input id="newCourseName" placeholder="Course name" autocomplete="off">
+    <label>
+    Par per hole, comma separated (9 or 18 values)
+</label>
+<input id="newCoursePars" placeholder="4,4,5,4,3,4,5,4,4,4,3,5,4,4,5,4,3,4">
+<label>
+Slope (optional)
+</label>
+<input id="newCourseSlope" placeholder="113" type="number">
+<button class="primary" onclick="addCourse()">
+    Save Course
+</button>
+</div>
+</div>
+<script>
+    const DEFAULT_COURSES = [
+    {
+        name: "Pine Valley Muni", pars: [4,4,5,4,3,4,5,4,4,4,3,5,4,4,5,4,3,4], slope: 113
+    }
+    ,
+    {
+        name: "Riverside Links", pars: [5,4,4,3,4,5,4,3,4,4,5,3,4,4,5,3,4,4], slope: 120
+    }
+    ,
+    ];
+    function loadJSON(key) {
+  try {
+    const val = JSON.parse(localStorage.getItem(key));
+    return val && typeof val === 'object' ? val : null;
+  } catch (e) { return null; }
+}
+let courses = loadJSON('ff_courses');
+if (!Array.isArray(courses) || courses.length === 0 ||
+    courses.some(c => !c.name || !Array.isArray(c.pars))) {
+  courses = DEFAULT_COURSES;
+  localStorage.removeItem('ff_courses');
+}
+let currentRound = loadJSON('ff_round');
+if (currentRound && (!currentRound.course || !Array.isArray(currentRound.course.pars))) {
+  currentRound = null;
+  localStorage.removeItem('ff_round');
+}
+
+    let currentHole = 0;
+    function saveLocal() {
+        localStorage.setItem('ff_courses', JSON.stringify(courses));
+        localStorage.setItem('ff_round', JSON.stringify(currentRound));
+    }
+    function show(id, btn) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+        if (id === 'scorecard') renderScorecard();
+        if (id === 'leaderboard') renderLeaderboard();
+        if (id === 'courses') renderCourses();
+        if (id === 'rounds') renderCourseSelect();
+    }
+    function renderCourseSelect() {
+        document.getElementById('courseSelect').innerHTML =
+        courses.map((c,i) =>`<option value="i">{i}">i">{c.name} (Par ${c.pars.reduce((a,b)=>a+b,0)})</option>`).join('');
+    }
+    function addPlayer() {
+        const inp = document.createElement('input');
+        inp.className = 'playerName';
+        inp.placeholder = `Player ${document.querySelectorAll('.playerName').length + 1} name`;
+        document.getElementById('playerInputs').appendChild(inp);
+    }
+    function startRound() {
+        const names = [...document.querySelectorAll('.playerName')].map(i =>i.value.trim()).filter(Boolean);
+        if (names.length< 1) return alert('Enter at least 1 player');
+        const typed = document.getElementById('joinCode').value.trim().toUpperCase();
+        const course = courses[document.getElementById('courseSelect').value];
+        currentRound = {
+            course,
+            game: document.getElementById('gameType').value,
+            date: new Date().toLocaleDateString(),
+            players: names.map(n =>({
+                name: n, scores: Array(course.pars.length).fill('')
+            }
+            ))
+        }
+        ;
+        currentHole = 0;
+        saveLocal();
+        setRoundCode(typed || newCode());
+        pushRound();
+        show('scorecard', document.querySelectorAll('nav button')[1]);
+    }
+    function newCode() {
+        const words = ['EAGLE','BIRDIE','PAR','BOGEY','CHIP','DRIVE','PUTT','WEDGE'];
+        return words[Math.floor(Math.random()*words.length)] + Math.floor(Math.random()*9+1);
+    }
+    function renderScorecard() {
+        if (!currentRound) {
+            document.getElementById('holeTitle').textContent = 'No active round';
+            document.getElementById('scorecardTable').innerHTML = '<p>Start one on the Rounds tab.</p>';
+            return;
+        }
+        const pars = currentRound.course.pars;
+        const par = pars[currentHole];
+        document.getElementById('holeTitle').textContent = `Hole currentHole+1of{currentHole+1} ofcurrentHole+1of{pars.length} · Par ${par}`;
+        let html = '<table><tr><th style="width:40%">Player</th><th>Score</th><th>vs Par</th></tr>';
+        currentRound.players.forEach((p, pi) =>{
+            const s = p.scores[currentHole];
+            const diff = s !== '' ? s - par : null;
+            let label = '<span style="color:#999">—</span>';
+            if (diff !== null) {
+                if (diff<= -2) label = `<span class="vsPar" style="color:#0277bd">${diff} 🐦</span>`;
+                else if (diff === -1) label = `<span class="vsPar" style="color:#0277bd">−1</span>`;
+                else if (diff === 0) label = '<span class="vsPar">E</span>';
+                else label = `<span class="vsPar" style="color:#c62828">+${diff}</span>`;
+            }
+            html += `<tr><td style="text-align:left;padding-left:8px">${p.name}</td><td><div class="stepper"><button onclick="stepScore(${pi},-1)">−</button><input type="number" min="1" max="15" value="s"onchange="setScore({s}" onchange="setScore(s"onchange="setScore({pi},this.value)"><button onclick="stepScore(${pi},1)">+</button></div></td><td>${label}</td></tr>`;
+        }
+        );
+        document.getElementById('scorecardTable').innerHTML = html + '</table>';
+        document.getElementById('prevBtn').disabled = currentHole === 0;
+        document.getElementById('nextBtn').textContent =
+        currentHole >= pars.length - 1 ? 'Finish 🏁' : 'Next →';
+    }
+    function stepScore(pi, delta) {
+        const cur = currentRound.players[pi].scores[currentHole];
+        const val = (cur === '' ? 4 : cur) + delta;
+        setScore(pi, Math.max(1, Math.min(15, val)));
+    }
+    function setScore(pi, val) {
+        currentRound.players[pi].scores[currentHole] = val === '' ? '' : +val;
+        saveLocal();
+        renderScorecard();
+        pushRound();
+    }
+    function changeHole(dir) {
+        const max = currentRound.course.pars.length - 1;
+        const next = currentHole + dir;
+        if (next< 0) return;
+        if (next > max) {
+            show('leaderboard', document.querySelectorAll('nav button')[2]);
+            return;
+        }
+        currentHole = next;
+        renderScorecard();
+    }
+    function totalStroke(p) {
+        return p.scores.reduce((a,s) => s !== '' ? a + s : a, 0);
+    }
+    function totalStableford(p) {
+        return p.scores.reduce((a,s,i) =>{
+            if (s === '') return a;
+            const d = s - currentRound.course.pars[i];
+            return a + (d<= -3 ? 5 : d === -2 ? 4 : d === -1 ? 3 : d === 0 ? 2 : d === 1 ? 1 : 0);
+        }
+        , 0);
+    }
+    function through(p) {
+        return p.scores.filter(s =>s !== '').length;
+    }
+    function skinsFor(p) {
+        const pi = currentRound.players.indexOf(p);
+        let total = 0, carry = 0, pot = 2;
+        for (let h = 0;
+        h< currentRound.course.pars.length;
+        h++) {
+            const scores = currentRound.players.map(pl => pl.scores[h]);
+            if (scores.some(s => s === '')) continue;
+            const best = Math.min(...scores);
+            if (scores.filter(s =>s === best).length === 1) {
+                if (scores[pi] === best) total += pot + carry;
+                carry = 0;
+                pot = 2;
+            }
+            else carry += pot;
+        }
+        return total;
+    }
+    function renderLeaderboard() {
+        if (!currentRound) {
+            document.getElementById('lbBody').innerHTML = '<p>No active round.</p>';
+            return;
+        }
+        const parTotal = currentRound.course.pars.reduce((a,b)=>a+b,0);
+        document.getElementById('lbTitle').textContent =
+        `currentRound.game[0].toUpperCase()+currentRound.game.slice(1)—{currentRound.game[0].toUpperCase()+currentRound.game.slice(1)} —currentRound.game[0].toUpperCase()+currentRound.game.slice(1)—{currentRound.course.name} (${currentRound.date})`;
+        let rows = currentRound.players.map(p => ({
+            name: p.name, thru: through(p),
+            val: currentRound.game === 'stableford' ? totalStableford(p)
+            : currentRound.game === 'skins' ? skinsFor(p)
+            : totalStroke(p) - parTotal
+        }
+        ));
+        rows.sort((a,b) => currentRound.game === 'stroke' ? a.val - b.val : b.val - a.val);
+        document.getElementById('lbBody').innerHTML = rows.map((r,i) => {
+            let cls = '', disp;
+            if (currentRound.game === 'stableford') disp = `${r.val} pts`;
+            else if (currentRound.game === 'skins') disp = `$${r.val}`;
+            else {
+                disp = r.val >0 ? `+r.val‘:r.val===0?′E′:‘{r.val}` : r.val === 0 ? 'E' : `r.val‘:r.val===0?′E′:‘{r.val}`;
+                cls = r.val< 0 ? 'good' : r.val >0 ? 'bad' : '';
+            }
+            return `<div class="leaderboard-row"><span>i+1.<b>{i+1}.<b>i+1.<b>{r.name}</b><small style="color:#777">(${r.thru} thru)</small></span><span class="badge cls">{cls}">cls">{disp}</span></div>`;
+        }
+        ).join('');
+    }
+    function copySummary() {
+        const items = [...document.querySelectorAll('#lbBody .leaderboard-row')]
+        .map(r => r.innerText.replace(/\n/g,' — '));
+        navigator.clipboard.writeText(`⛳ ${document.getElementById('lbTitle').textContent}\n` + items.join('\n'))
+        .then(() => alert('Leaderboard copied — paste into your group chat!'));
+    }
+    function renderCourses() {
+        document.getElementById('courseList').innerHTML = courses.map(c =>`<div class="leaderboard-row"><span><b>c.name</b></span><span>{c.name}</b></span><span>c.name</b></span><span>{c.pars.length} holes · Par c.pars.reduce((a,b)=>a+b,0)⋅Slope{c.pars.reduce((a,b)=>a+b,0)} · Slopec.pars.reduce((a,b)=>a+b,0)⋅Slope{c.slope}</span></div>`).join('');
+    }
+    function addCourse() {
+        const name = document.getElementById('newCourseName').value.trim();
+        const pars = document.getElementById('newCoursePars').value.split(',').map(n => +n.trim()).filter(n => n >0 && n<= 8);
+        if (!name || pars.length< 9) return alert('Enter a name and at least 9 valid par values');
+        courses.push({
+            name, pars, slope: +document.getElementById('newCourseSlope').value || 113
+        }
+        );
+        saveLocal();
+        renderCourses();
+        renderCourseSelect();
+        document.getElementById('newCourseName').value = '';
+        document.getElementById('newCoursePars').value = '';
+        alert('Course saved!');
+    }
+    renderCourseSelect();
+</script>
+<script type="module">
+    import {
+        initializeApp
+    }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+        getAuth, signInAnonymously
+    }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+        getFirestore, doc, setDoc, onSnapshot
+    }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    // ⚠️ PASTE YOUR FIREBASE CONFIG HERE
+    const firebaseConfig = {
+        apiKey: "AIzaSyDaD6_sJgbhiVctZefWE0x5h383NHvA1aQ",
+        authDomain: "http://fairway-friends-4c3d0.firebaseapp.com/",
+        projectId:  "fairway-friends-4c3d0",
+        storageBucket: "fairway-friends-4c3d0.firebasestorage.app",
+        messagingSenderId: "629803983175",
+        appId: "1:629803983175:web:eaeeb1306febff5b6a2c62"
+    }
+    ;
+    let db = null;
+    const roundCodeStored = localStorage.getItem('ff_code') || null;
+    let syncing = false;
+    let unsub = null;
+    let pushTimer = null;
+    try {
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        signInAnonymously(getAuth(app)).catch(() => console.log('Offline — local mode'));
+    }
+    catch (e) {
+        console.log('Firebase not configured — running in local-only mode');
+    }
+    // These are called by the main script above — attach to window so both scripts can see them
+    window.setRoundCode = function(code) {
+        localStorage.setItem('ff_code', code);
+        document.getElementById('codeBar').style.display = 'block';
+        document.getElementById('codeLabel').textContent = code;
+        roundCodeStored;
+        listen();
+    }
+    ;
+    window.pushRound = function() {
+        document.getElementById('playerCount').textContent = currentRound ? `· ${currentRound.players.length} players` : '';
+        const code = localStorage.getItem('ff_code');
+        if (!db || !code || !currentRound) return;
+        clearTimeout(pushTimer);
+        pushTimer = setTimeout(async () => {
+            syncing = true;
+            try {
+                await setDoc(doc(db, 'rounds', code), JSON.parse(JSON.stringify(currentRound)));
+                setSync(true);
+            }
+            catch (e) {
+                setSync(false);
+            }
+            syncing = false;
+        }
+        , 400);
+    }
+    ;
+    function listen() {
+        const code = localStorage.getItem('ff_code');
+        if (!db || !code || unsub) return;
+        unsub = onSnapshot(doc(db, 'rounds', code), (snap) => {
+            if (syncing || !snap.exists() || !currentRound) return;
+            const cloud = snap.data();
+            if (cloud.course && cloud.course.name === currentRound.course.name) {
+                currentRound = cloud;
+                localStorage.setItem('ff_round', JSON.stringify(currentRound));
+                renderScorecard();
+                renderLeaderboard();
+            }
+        }
+        , () =>setSync(false));
+    }
+    function setSync(on) {
+        document.getElementById('syncDot').className = 'syncDot' + (on ? ' on' : '');
+    }
+    // Restore round-code bar on load
+    if (roundCodeStored) {
+        document.getElementById('codeBar').style.display = 'block';
+        document.getElementById('codeLabel').textContent = roundCodeStored;
+        listen();
+    }
+</script>
