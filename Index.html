@@ -180,7 +180,8 @@ else if (diff === -1) label = `<span class="vsPar" style="color:#0277bd">−1</s
 else if (diff === 0) label = '<span class="vsPar">E</span>';
 else label = `<span class="vsPar" style="color:#c62828">+${diff}</span>`;
 }
-html += `<tr><td style="text-align:left;padding-left:8px">p.name</td><td><divclass="stepper"><buttononclick="stepScore({p.name}</td><td><div class="stepper"><button onclick="stepScore(p.name</td><td><divclass="stepper"><buttononclick="stepScore({pi},-1)">−</button><input type="number" min="1" max="15" value="s"onchange="setScore({s}" onchange="setScore(s"onchange="setScore({pi},this.value)"><button onclick="stepScore(pi,1)">+</button></div></td><td>{pi},1)">+</button></div></td><td>pi,1)">+</button></div></td><td>{label}</td></tr>`;
+html += '<tr><td style="text-align:left;padding-left:8px">' + p.name + '</td><td><div class="stepper"><button onclick="stepScore(' + pi + ',-1)">−</button><input type="number" min="1" max="15" value="' + s + '" onchange="setScore(' + pi + ',this.value)"><button onclick="stepScore(' + pi + ',1)">+</button></div></td><td>' + label + '</td></tr>';
+
 });
 document.getElementById('scorecardTable').innerHTML = html + '</table>';
 document.getElementById('prevBtn').disabled = currentHole === 0;
