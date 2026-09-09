@@ -232,7 +232,7 @@ function renderLeaderboard() {
 if (!currentRound) { document.getElementById('lbBody').innerHTML = '<p>No active round.</p>'; return; }
 const parTotal = currentRound.course.pars.reduce((a,b)=>a+b,0);
 const gameName = currentRound.game.charAt(0).toUpperCase() + currentRound.game.slice(1);
-document.getElementById('lbTitle').textContent = `gameName—{gameName} —gameName—{currentRound.course.name} (${currentRound.date})`;
+ddocument.getElementById('lbTitle').textContent = gameName + ' — ' + currentRound.course.name + ' (' + currentRound.date + ')';
 let rows = currentRound.players.map(p => ({
 name: p.name, thru: through(p),
 val: currentRound.game === 'stableford' ? totalStableford(p)
