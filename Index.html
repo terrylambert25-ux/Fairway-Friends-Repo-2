@@ -125,8 +125,13 @@ if (id === 'courses') renderCourses();
 if (id === 'rounds') renderCourseSelect();
 }
 function renderCourseSelect() {
-document.getElementById('courseSelect').innerHTML =
-courses.map((c,i) => `<option value="i">{i}">i">${c.name} (Par ${c.pars.reduce((a,b)=>a+b,0)})</option>`).join('');
+  var html = '';
+  for (var i = 0; i < courses.length; i++) {
+    var c = courses[i];
+    var total = c.pars.reduce(function(a,b){return a+b;},0);
+    html += '<option value="' + i + '">' + c.name + ' (Par ' + total + ')</option>';
+  }
+  document.getElementById('courseSelect').innerHTML = html;
 }
 function addPlayer() {
 const inp = document.createElement('input');
