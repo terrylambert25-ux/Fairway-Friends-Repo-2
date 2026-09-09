@@ -256,8 +256,13 @@ navigator.clipboard.writeText(`⛳ ${document.getElementById('lbTitle').textCont
 .then(() => alert('Leaderboard copied — paste into your group chat!'));
 }
 function renderCourses() {
-document.getElementById('courseList').innerHTML = courses.map(c =>
-`<div class="leaderboard-row"><span><b>c.name</b></span><span>{c.name}</b></span><span>c.name</b></span><span>{c.pars.length} holes · Par c.pars.reduce((a,b)=>a+b,0)⋅Slope{c.pars.reduce((a,b)=>a+b,0)} · Slopec.pars.reduce((a,b)=>a+b,0)⋅Slope{c.slope}</span></div>`).join('');
+  var html = '';
+  for (var i = 0; i < courses.length; i++) {
+    var c = courses[i];
+    var total = c.pars.reduce(function(a,b){return a+b;},0);
+    html += '<div class="leaderboard-row"><span><b>' + c.name + '</b></span><span>' + c.pars.length + ' holes · Par ' + total + ' · Slope ' + c.slope + '</span></div>';
+  }
+  document.getElementById('courseList').innerHTML = html;
 }
 function addCourse() {
 const name = document.getElementById('newCourseName').value.trim();
