@@ -126,7 +126,7 @@ if (id === 'rounds') renderCourseSelect();
 }
 function renderCourseSelect() {
 document.getElementById('courseSelect').innerHTML =
-courses.map((c,i) => `<option value="i">{i}">i">{c.name} (Par ${c.pars.reduce((a,b)=>a+b,0)})</option>`).join('');
+courses.map((c,i) => `<option value="i">{i}">i">${c.name} (Par ${c.pars.reduce((a,b)=>a+b,0)})</option>`).join('');
 }
 function addPlayer() {
 const inp = document.createElement('input');
