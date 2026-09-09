@@ -162,7 +162,7 @@ return words[Math.floor(Math.random()*words.length)] + Math.floor(Math.random()*
 }
 function renderScorecard() {
 if (!currentRound) {
-document.getElementById('holeTitle').textContent = 'No active round';
+document.getElementById('holeTitle').textContent = 'Hole ' + (currentHole+1) + ' of ' + pars.length + ' · Par ' + par;
 document.getElementById('scorecardTable').innerHTML = '<p>Start one on the Rounds tab.</p>';
 return;
 }
