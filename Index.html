@@ -94,190 +94,217 @@ th { background: #e8f5e9; font-size: 12px; }
 </div>
 </div>
 <script>
-const DEFAULT_COURSES = [
+var DEFAULT_COURSES = [
 { name: "Pine Valley Muni", pars: [4,4,5,4,3,4,5,4,4,4,3,5,4,4,5,4,3,4], slope: 113 },
 { name: "Riverside Links", pars: [5,4,4,3,4,5,4,3,4,4,5,3,4,4,5,3,4,4], slope: 120 }
 ];
 function loadJSON(key) {
-try { const v = JSON.parse(localStorage.getItem(key)); return v && typeof v === 'object' ? v : null; } catch (e) { return null; }
+  try { var v = JSON.parse(localStorage.getItem(key)); return (v && typeof v === 'object') ? v : null; } catch (e) { return null; }
 }
-let courses = loadJSON('ff_courses');
-if (!Array.isArray(courses) || courses.length === 0 || courses.some(c => !c.name || !Array.isArray(c.pars))) {
-courses = DEFAULT_COURSES; localStorage.removeItem('ff_courses');
-}
-let currentRound = loadJSON('ff_round');
-if (currentRound && (!currentRound.course || !Array.isArray(currentRound.course.pars))) {
-currentRound = null; localStorage.removeItem('ff_round');
-}
-let currentHole = 0;
+var courses = loadJSON('ff_courses');
+if (!Array.isArray(courses) || courses.length === 0) { courses = DEFAULT_COURSES; }
+var badCourse = false;
+for (var ci = 0; ci < courses.length; ci++) { if (!courses[ci].name || !Array.isArray(courses[ci].pars)) { badCourse = true; } }
+if (badCourse) { courses = DEFAULT_COURSES; localStorage.removeItem('ff_courses'); }
+var currentRound = loadJSON('ff_round');
+if (currentRound && (!currentRound.course || !Array.isArray(currentRound.course.pars))) { currentRound = null; localStorage.removeItem('ff_round'); }
+var currentHole = 0;
 function saveLocal() {
-localStorage.setItem('ff_courses', JSON.stringify(courses));
-localStorage.setItem('ff_round', JSON.stringify(currentRound));
+  localStorage.setItem('ff_courses', JSON.stringify(courses));
+  localStorage.setItem('ff_round', JSON.stringify(currentRound));
 }
 function show(id, btn) {
-document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-document.getElementById(id).classList.add('active');
-document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-if (btn) btn.classList.add('active');
-if (id === 'scorecard') renderScorecard();
-if (id === 'leaderboard') renderLeaderboard();
-if (id === 'courses') renderCourses();
-if (id === 'rounds') renderCourseSelect();
+  var pages = document.querySelectorAll('.page');
+  for (var i = 0; i < pages.length; i++) { pages[i].classList.remove('active'); }
+  document.getElementById(id).classList.add('active');
+  var btns = document.querySelectorAll('nav button');
+  for (var j = 0; j < btns.length; j++) { btns[j].classList.remove('active'); }
+  if (btn) btn.classList.add('active');
+  if (id === 'scorecard') renderScorecard();
+  if (id === 'leaderboard') renderLeaderboard();
+  if (id === 'courses') renderCourses();
+  if (id === 'rounds') renderCourseSelect();
 }
+function sumPars(c) { var t = 0; for (var i = 0; i < c.pars.length; i++) { t += c.pars[i]; } return t; }
 function renderCourseSelect() {
   var html = '';
   for (var i = 0; i < courses.length; i++) {
     var c = courses[i];
-    var total = c.pars.reduce(function(a,b){return a+b;},0);
-    html += '<option value="' + i + '">' + c.name + ' (Par ' + total + ')</option>';
+    html = html + '<option value="' + i + '">' + c.name + ' (Par ' + sumPars(c) + ')</option>';
   }
   document.getElementById('courseSelect').innerHTML = html;
 }
 function addPlayer() {
-const inp = document.createElement('input');
-inp.className = 'playerName';
-inp.placeholder = `Player ${document.querySelectorAll('.playerName').length + 1} name`;
-document.getElementById('playerInputs').appendChild(inp);
+  var inp = document.createElement('input');
+  inp.className = 'playerName';
+  inp.placeholder = 'Player ' + (document.querySelectorAll('.playerName').length + 1) + ' name';
+  document.getElementById('playerInputs').appendChild(inp);
 }
 function startRound() {
-const names = [...document.querySelectorAll('.playerName')].map(i => i.value.trim()).filter(Boolean);
-if (names.length < 1) return alert('Enter at least 1 player');
-const typed = document.getElementById('joinCode').value.trim().toUpperCase();
-const course = courses[document.getElementById('courseSelect').value];
-currentRound = {
-course: JSON.parse(JSON.stringify(course)),
-game: document.getElementById('gameType').value,
-date: new Date().toLocaleDateString(),
-players: names.map(n => ({ name: n, scores: Array(course.pars.length).fill('') }))
-};
-currentHole = 0;
-saveLocal();
-if (window.setRoundCode) setRoundCode(typed || newCode());
-if (window.pushRound) pushRound();
-show('scorecard', document.querySelectorAll('nav button')[1]);
+  var inputs = document.querySelectorAll('.playerName');
+  var names = [];
+  for (var i = 0; i < inputs.length; i++) { if (inputs[i].value.trim()) names.push(inputs[i].value.trim()); }
+  if (names.length < 1) { alert('Enter at least 1 player'); return; }
+  var typed = document.getElementById('joinCode').value.trim().toUpperCase();
+  var course = courses[document.getElementById('courseSelect').value];
+  var players = [];
+  for (var n = 0; n < names.length; n++) {
+    var empty = [];
+    for (var h = 0; h < course.pars.length; h++) { empty.push(''); }
+    players.push({ name: names[n], scores: empty });
+  }
+  currentRound = { course: JSON.parse(JSON.stringify(course)), game: document.getElementById('gameType').value, date: new Date().toLocaleDateString(), players: players };
+  currentHole = 0;
+  saveLocal();
+  if (window.setRoundCode) setRoundCode(typed || newCode());
+  if (window.pushRound) pushRound();
+  show('scorecard', document.querySelectorAll('nav button')[1]);
 }
 function newCode() {
-const words = ['EAGLE','BIRDIE','PAR','BOGEY','CHIP','DRIVE','PUTT','WEDGE'];
-return words[Math.floor(Math.random()*words.length)] + Math.floor(Math.random()*9+1);
+  var words = ['EAGLE','BIRDIE','PAR','BOGEY','CHIP','DRIVE','PUTT','WEDGE'];
+  return words[Math.floor(Math.random()*words.length)] + Math.floor(Math.random()*9+1);
 }
 function renderScorecard() {
-if (!currentRound) {
-document.getElementById('holeTitle').textContent = 'Hole ' + (currentHole+1) + ' of ' + pars.length + ' · Par ' + par;
-document.getElementById('scorecardTable').innerHTML = '<p>Start one on the Rounds tab.</p>';
-return;
-}
-const pars = currentRound.course.pars;
-const par = pars[currentHole];
-document.getElementById('holeTitle').textContent = `Hole currentHole+1of{currentHole+1} ofcurrentHole+1of{pars.length} · Par ${par}`;
-let html = '<table><tr><th style="width:40%">Player</th><th>Score</th><th>vs Par</th></tr>';
-currentRound.players.forEach((p, pi) => {
-const s = p.scores[currentHole];
-const diff = s !== '' ? s - par : null;
-let label = '<span style="color:#999">—</span>';
-if (diff !== null) {
-if (diff <= -2) label = `<span class="vsPar" style="color:#0277bd">${diff} 🐦</span>`;
-else if (diff === -1) label = `<span class="vsPar" style="color:#0277bd">−1</span>`;
-else if (diff === 0) label = '<span class="vsPar">E</span>';
-else label = `<span class="vsPar" style="color:#c62828">+${diff}</span>`;
-}
-html += '<tr><td style="text-align:left;padding-left:8px">' + p.name + '</td><td><div class="stepper"><button onclick="stepScore(' + pi + ',-1)">−</button><input type="number" min="1" max="15" value="' + s + '" onchange="setScore(' + pi + ',this.value)"><button onclick="stepScore(' + pi + ',1)">+</button></div></td><td>' + label + '</td></tr>';
-
-});
-document.getElementById('scorecardTable').innerHTML = html + '</table>';
-document.getElementById('prevBtn').disabled = currentHole === 0;
-document.getElementById('nextBtn').textContent = currentHole >= pars.length - 1 ? 'Finish 🏁' : 'Next →';
+  if (!currentRound) {
+    document.getElementById('holeTitle').textContent = 'No active round';
+    document.getElementById('scorecardTable').innerHTML = '<p>Start one on the Rounds tab.</p>';
+    return;
+  }
+  var pars = currentRound.course.pars;
+  var par = pars[currentHole];
+  document.getElementById('holeTitle').textContent = 'Hole ' + (currentHole+1) + ' of ' + pars.length + ' - Par ' + par;
+  var html = '<table><tr><th style="width:40%">Player</th><th>Score</th><th>vs Par</th></tr>';
+  for (var pi = 0; pi < currentRound.players.length; pi++) {
+    var p = currentRound.players[pi];
+    var s = p.scores[currentHole];
+    var label = '<span style="color:#999">-</span>';
+    if (s !== '') {
+      var diff = s - par;
+      if (diff <= -2) { label = '<span class="vsPar" style="color:#0277bd">' + diff + ' bird!</span>'; }
+      else if (diff === -1) { label = '<span class="vsPar" style="color:#0277bd">-1</span>'; }
+      else if (diff === 0) { label = '<span class="vsPar">E</span>'; }
+      else { label = '<span class="vsPar" style="color:#c62828">+' + diff + '</span>'; }
+    }
+    html = html + '<tr><td style="text-align:left;padding-left:8px">' + p.name + '</td><td><div class="stepper"><button onclick="stepScore(' + pi + ',-1)">-</button><input type="number" min="1" max="15" value="' + s + '" onchange="setScore(' + pi + ',this.value)"><button onclick="stepScore(' + pi + ',1)">+</button></div></td><td>' + label + '</td></tr>';
+  }
+  document.getElementById('scorecardTable').innerHTML = html + '</table>';
+  document.getElementById('prevBtn').disabled = (currentHole === 0);
+  document.getElementById('nextBtn').textContent = (currentHole >= pars.length - 1) ? 'Finish' : 'Next >';
 }
 function stepScore(pi, delta) {
-const cur = currentRound.players[pi].scores[currentHole];
-const val = (cur === '' ? 4 : cur) + delta;
-setScore(pi, Math.max(1, Math.min(15, val)));
+  var cur = currentRound.players[pi].scores[currentHole];
+  var val = (cur === '' ? 4 : cur) + delta;
+  if (val < 1) val = 1; if (val > 15) val = 15;
+  setScore(pi, val);
 }
 function setScore(pi, val) {
-currentRound.players[pi].scores[currentHole] = val === '' ? '' : +val;
-saveLocal(); renderScorecard();
-if (window.pushRound) pushRound();
+  currentRound.players[pi].scores[currentHole] = (val === '') ? '' : +val;
+  saveLocal(); renderScorecard();
+  if (window.pushRound) pushRound();
 }
 function changeHole(dir) {
-const max = currentRound.course.pars.length - 1;
-const next = currentHole + dir;
-if (next < 0) return;
-if (next > max) { show('leaderboard', document.querySelectorAll('nav button')[2]); return; }
-currentHole = next;
-renderScorecard();
+  var max = currentRound.course.pars.length - 1;
+  var next = currentHole + dir;
+  if (next < 0) return;
+  if (next > max) { show('leaderboard', document.querySelectorAll('nav button')[2]); return; }
+  currentHole = next;
+  renderScorecard();
 }
-function totalStroke(p) { return p.scores.reduce((a,s) => s !== '' ? a + s : a, 0); }
+function totalStroke(p) { var t = 0; for (var i = 0; i < p.scores.length; i++) { if (p.scores[i] !== '') t += p.scores[i]; } return t; }
 function totalStableford(p) {
-return p.scores.reduce((a,s,i) => {
-if (s === '') return a;
-const d = s - currentRound.course.pars[i];
-return a + (d <= -3 ? 5 : d === -2 ? 4 : d === -1 ? 3 : d === 0 ? 2 : d === 1 ? 1 : 0);
-}, 0);
+  var t = 0;
+  for (var i = 0; i < p.scores.length; i++) {
+    if (p.scores[i] === '') continue;
+    var d = p.scores[i] - currentRound.course.pars[i];
+    if (d <= -3) t += 5; else if (d === -2) t += 4; else if (d === -1) t += 3; else if (d === 0) t += 2; else if (d === 1) t += 1;
+  }
+  return t;
 }
-function through(p) { return p.scores.filter(s => s !== '').length; }
+function through(p) { var t = 0; for (var i = 0; i < p.scores.length; i++) { if (p.scores[i] !== '') t++; } return t; }
 function skinsFor(p) {
-const pi = currentRound.players.indexOf(p);
-let total = 0, carry = 0, pot = 2;
-for (let h = 0; h < currentRound.course.pars.length; h++) {
-const scores = currentRound.players.map(pl => pl.scores[h]);
-if (scores.some(s => s === '')) continue;
-const best = Math.min(...scores);
-if (scores.filter(s => s === best).length === 1) {
-if (scores[pi] === best) total += pot + carry;
-carry = 0; pot = 2;
-} else carry += pot;
-}
-return total;
+  var pi = -1;
+  for (var x = 0; x < currentRound.players.length; x++) { if (currentRound.players[x] === p) pi = x; }
+  var total = 0, carry = 0, pot = 2;
+  for (var h = 0; h < currentRound.course.pars.length; h++) {
+    var scores = [];
+    for (var q = 0; q < currentRound.players.length; q++) { scores.push(currentRound.players[q].scores[h]); }
+    var anyEmpty = false;
+    for (var e = 0; e < scores.length; e++) { if (scores[e] === '') anyEmpty = true; }
+    if (anyEmpty) continue;
+    var best = Math.min.apply(null, scores);
+    var winners = 0;
+    for (var w = 0; w < scores.length; w++) { if (scores[w] === best) winners++; }
+    if (winners === 1) {
+      if (scores[pi] === best) total = total + pot + carry;
+      carry = 0; pot = 2;
+    } else { carry = carry + pot; }
+  }
+  return total;
 }
 function renderLeaderboard() {
-if (!currentRound) { document.getElementById('lbBody').innerHTML = '<p>No active round.</p>'; return; }
-const parTotal = currentRound.course.pars.reduce((a,b)=>a+b,0);
-const gameName = currentRound.game.charAt(0).toUpperCase() + currentRound.game.slice(1);
-ddocument.getElementById('lbTitle').textContent = gameName + ' — ' + currentRound.course.name + ' (' + currentRound.date + ')';
-let rows = currentRound.players.map(p => ({
-name: p.name, thru: through(p),
-val: currentRound.game === 'stableford' ? totalStableford(p)
-: currentRound.game === 'skins' ? skinsFor(p)
-: totalStroke(p) - parTotal
-}));
-rows.sort((a,b) => currentRound.game === 'stroke' ? a.val - b.val : b.val - a.val);
-document.getElementById('lbBody').innerHTML = rows.map((r,i) => {
-let cls = '', disp;
-if (currentRound.game === 'stableford') disp = r.val + ' pts';
-else if (currentRound.game === 'skins') disp = '$' + r.val;
-else {
-  disp = r.val > 0 ? '+' + r.val : (r.val === 0 ? 'E' : '' + r.val);
-  cls = r.val < 0 ? 'good' : (r.val > 0 ? 'bad' : '');
-  
-}
-}return '<div class="leaderboard-row"><span>' + (i+1) + '. <b>' + r.name + '</b> <small style="color:#777">(' + r.thru + ' thru)</small></span><span class="badge ' + cls + '">' + disp + '</span></div>';
-).join('');
+  if (!currentRound) { document.getElementById('lbBody').innerHTML = '<p>No active round.</p>'; return; }
+  var parTotal = sumPars(currentRound.course);
+  var gameName = currentRound.game.charAt(0).toUpperCase() + currentRound.game.slice(1);
+  document.getElementById('lbTitle').textContent = gameName + ' - ' + currentRound.course.name + ' (' + currentRound.date + ')';
+  var rows = [];
+  for (var i = 0; i < currentRound.players.length; i++) {
+    var p = currentRound.players[i];
+    var val;
+    if (currentRound.game === 'stableford') { val = totalStableford(p); }
+    else if (currentRound.game === 'skins') { val = skinsFor(p); }
+    else { val = totalStroke(p) - parTotal; }
+    rows.push({ name: p.name, thru: through(p), val: val });
+  }
+  rows.sort(function(a,b) {
+    if (currentRound.game === 'stroke') { return a.val - b.val; }
+    return b.val - a.val;
+  });
+  var html = '';
+  for (var r = 0; r < rows.length; r++) {
+    var row = rows[r];
+    var cls = '', disp;
+    if (currentRound.game === 'stableford') { disp = row.val + ' pts'; }
+    else if (currentRound.game === 'skins') { disp = '$' + row.val; }
+    else {
+      if (row.val > 0) { disp = '+' + row.val; cls = 'bad'; }
+      else if (row.val === 0) { disp = 'E'; }
+      else { disp = '' + row.val; cls = 'good'; }
+    }
+    html = html + '<div class="leaderboard-row"><span>' + (r+1) + '. <b>' + row.name + '</b> <small style="color:#777">(' + row.thru + ' thru)</small></span><span class="badge ' + cls + '">' + disp + '</span></div>';
+  }
+  document.getElementById('lbBody').innerHTML = html;
 }
 function copySummary() {
-const items = [...document.querySelectorAll('#lbBody .leaderboard-row')].map(r => r.innerText.replace(/\n/g,' — '));
-navigator.clipboard.writeText(`⛳ ${document.getElementById('lbTitle').textContent}\n` + items.join('\n'))
-.then(() => alert('Leaderboard copied — paste into your group chat!'));
+  var items = [];
+  var rows = document.querySelectorAll('#lbBody .leaderboard-row');
+  for (var i = 0; i < rows.length; i++) { items.push(rows[i].innerText.replace(/\n/g,' - ')); }
+  navigator.clipboard.writeText('Golf: ' + document.getElementById('lbTitle').textContent + '\n' + items.join('\n'))
+    .then(function() { alert('Leaderboard copied!'); });
 }
 function renderCourses() {
   var html = '';
   for (var i = 0; i < courses.length; i++) {
     var c = courses[i];
-    var total = c.pars.reduce(function(a,b){return a+b;},0);
-    html += '<div class="leaderboard-row"><span><b>' + c.name + '</b></span><span>' + c.pars.length + ' holes · Par ' + total + ' · Slope ' + c.slope + '</span></div>';
+    html = html + '<div class="leaderboard-row"><span><b>' + c.name + '</b></span><span>' + c.pars.length + ' holes, Par ' + sumPars(c) + ', Slope ' + c.slope + '</span></div>';
   }
   document.getElementById('courseList').innerHTML = html;
 }
 function addCourse() {
-const name = document.getElementById('newCourseName').value.trim();
-const pars = document.getElementById('newCoursePars').value.split(',').map(n => +n.trim()).filter(n => n > 0 && n <= 8);
-if (!name || pars.length < 9) return alert('Enter a name and at least 9 valid par values');
-courses.push({ name, pars, slope: +document.getElementById('newCourseSlope').value || 113 });
-saveLocal(); renderCourses(); renderCourseSelect();
-document.getElementById('newCourseName').value = '';
-document.getElementById('newCoursePars').value = '';
-alert('Course saved!');
+  var name = document.getElementById('newCourseName').value.trim();
+  var parStr = document.getElementById('newCoursePars').value.split(',');
+  var pars = [];
+  for (var i = 0; i < parStr.length; i++) { var n = +parStr[i].trim(); if (n > 0 && n <= 8) pars.push(n); }
+  if (!name || pars.length < 9) { alert('Enter a name and at least 9 valid par values'); return; }
+  var slope = +document.getElementById('newCourseSlope').value || 113;
+  courses.push({ name: name, pars: pars, slope: slope });
+  saveLocal(); renderCourses(); renderCourseSelect();
+  document.getElementById('newCourseName').value = '';
+  document.getElementById('newCoursePars').value = '';
+  alert('Course saved!');
 }
 renderCourseSelect();
 </script>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
