@@ -242,11 +242,12 @@ val: currentRound.game === 'stableford' ? totalStableford(p)
 rows.sort((a,b) => currentRound.game === 'stroke' ? a.val - b.val : b.val - a.val);
 document.getElementById('lbBody').innerHTML = rows.map((r,i) => {
 let cls = '', disp;
-if (currentRound.game === 'stableford') disp = `${r.val} pts`;
-else if (currentRound.game === 'skins') disp = `$${r.val}`;
+if (currentRound.game === 'stableford') disp = r.val + ' pts';
+else if (currentRound.game === 'skins') disp = '$' + r.val;
 else {
-disp = r.val > 0 ? `+r.val‘:r.val===0?′E′:‘{r.val}` : r.val === 0 ? 'E' : `r.val‘:r.val===0?′E′:‘{r.val}`;
-cls = r.val < 0 ? 'good' : r.val > 0 ? 'bad' : '';
+  disp = r.val > 0 ? '+' + r.val : (r.val === 0 ? 'E' : '' + r.val);
+  cls = r.val < 0 ? 'good' : (r.val > 0 ? 'bad' : '');
+  
 }
 }return '<div class="leaderboard-row"><span>' + (i+1) + '. <b>' + r.name + '</b> <small style="color:#777">(' + r.thru + ' thru)</small></span><span class="badge ' + cls + '">' + disp + '</span></div>';
 ).join('');
